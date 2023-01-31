@@ -9,7 +9,7 @@ from os.path import isfile, join
 
 current_dir = pathlib.Path().resolve()
 new_folder = current_dir / Path("dir")
-playlist_link = "https://www.youtube.com/playlist?list=PLrj1RPBjbCU6cpBxBdhLNGaGcSGpWqoOq"
+playlist_link = "YOUR_YOUTUBE_PLAYLIST_FULL_URL"
 
 p = Playlist(playlist_link)
 print(f"Downloading: {p.title}")
