@@ -21,10 +21,8 @@ if not os.path.exists(new_folder):
     os.mkdir(new_folder)
 
 print(f"Converting mp4 files to mp3 audio files")
-for file in listdir(current_dir):
-    mp4 = Path(str(file))
+for mp4 in map(Path, listdir(current_dir)):
     if isfile(join(current_dir, mp4)) and mp4.name.endswith("mp4"):
-        f = AudioFileClip(str(current_dir / mp4))
-        f.write_audiofile(new_folder / Path(mp4.with_suffix(".mp3")))
-        f.close()
+        with AudioFileClip(str(current_dir / mp4)) as f:
+            f.write_audiofile(new_folder / mp4.with_suffix(".mp3"))
         os.remove(current_dir / mp4)
