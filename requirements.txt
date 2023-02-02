@@ -1,2 +1,4 @@
 pytube
 moviepy
+pathlib
+tqdm
