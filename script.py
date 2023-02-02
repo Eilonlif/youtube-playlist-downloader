@@ -1,3 +1,4 @@
+import argparse
 import pathlib
 from pathlib import Path
 from pytube import Playlist
@@ -6,11 +7,29 @@ import tqdm
 from os import listdir
 from os.path import isfile, join
 
+DEBUG = 1
+
+def debug(str):
+    if DEBUG:
+        print(str)
+
+playlist_link = ""
+
+parser = argparse.ArgumentParser(description='Download YouTube files')
+parser.add_argument('-u', '--url', const=playlist_link, default="YOUR_YOUTUBE_PLAYLIST_FULL_URL", nargs="?", required=False, help="YouTube Playlist URL")
+args = parser.parse_args()
+playlist_link = args.url
 
 new_folder = pathlib.Path().resolve() / Path("dir")
-playlist_link = "YOUR_YOUTUBE_PLAYLIST_FULL_URL"
 
 p = Playlist(playlist_link)
+try:
+    if p.length == 0:
+        print("Playlist length is 0")
+        exit()
+except:
+    print(f"Unable to get playlist from URL: {playlist_link}")
+    exit()
 
 print(f"Creating dictionary {new_folder.name}")
 if not os.path.exists(new_folder):
