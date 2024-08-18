@@ -1,4 +1,5 @@
-pytube
+pytube==15.0.0
 moviepy
 pathlib
 tqdm
+pydub

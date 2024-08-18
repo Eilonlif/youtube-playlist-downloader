@@ -2,40 +2,81 @@ import argparse
 import pathlib
 from pathlib import Path
 from pytube import Playlist
+from pytube import YouTube
+from pydub import AudioSegment
 from moviepy.editor import *
 import tqdm
 from os import listdir
 from os.path import isfile
+import os
+import sys
+
+class Convertor:
+    def __init__(self,
+                 playlist_link,
+                 folder_name = "dir"):
+        self.playlist_link = playlist_link
+        self.output_path = pathlib.Path().resolve() / Path(folder_name)
+        self.playlist = Playlist(self.playlist_link)
+        if not self.playlist:
+            print("Playlist is empty or the link is wrong")
+            exit()
+
+        if not os.path.exists(self.output_path):
+            print(f"Creating new dictionary {self.output_path.name}")
+            os.mkdir(self.output_path)
+
+    def _download_playlist(self):
+        print(f"[+] Downloading: {self.playlist.title}")
+        
+        for video_url in tqdm.tqdm(self.playlist.video_urls):
+            self.download_video_as_mp3(video_url, self.output_path)
 
 
-playlist_link = "YOUR_YOUTUBE_PLAYLIST_FULL_URL"
-folder_name = "dir"
+        # for video in tqdm.tqdm(self.playlist.videos):
+        #     video.streams.filter(file_extension="mp4").desc().first().download(output_path=output_path)
+    
+    def download_video_as_mp3(self, video_url, output_path):
+        try:
+            yt = YouTube(video_url)
+            # Download the highest resolution audio stream
+            audio_stream = yt.streams.filter(only_audio=True).first()
+            audio_file = audio_stream.download(output_path=output_path)
+            
+            # Convert to MP3
+            base, ext = os.path.splitext(audio_file)
+            mp3_file = base + '.mp3'
+            AudioSegment.from_file(audio_file).export(mp3_file, format='mp3')
+            
+            # Remove the original file
+            os.remove(audio_file)
+            print(f"Downloaded and converted: {yt.title}")
+        except Exception as e:
+            print(f"Failed to download {video_url}: {str(e)}")
 
-parser = argparse.ArgumentParser(description='Download YouTube files')
-parser.add_argument('-u', '--url', const=playlist_link, default="YOUR_YOUTUBE_PLAYLIST_FULL_URL", nargs="?", required=False, help="YouTube Playlist URL")
-parser.add_argument('-f', '--folder-name', const=folder_name, default="dir", nargs="?", required=False, help="New folder name")
-args = parser.parse_args()
-playlist_link = args.url
+    def process(self):
+        print("[+] Starting converstion process")
+        self._download_playlist()
+        # self._convert_mp4_to_mp3()
+        print("[+] Done!")
 
-new_folder = pathlib.Path().resolve() / Path(folder_name)
-p = Playlist(playlist_link)
+def main(args):
+    for playlist_link in args:
+        convertor = Convertor(playlist_link)
+        convertor.process()
 
-if not p:
-    print("Playlist is empty or the link is wrong")
-    exit()
 
-if not os.path.exists(new_folder):
-    print(f"Creating new dictionary {new_folder.name}")
-    os.mkdir(new_folder)
+if __name__ == "__main__":
+    args = None
+    if len(sys.argv) < 2:
+        args = input("[!] please enter a vaild youtube playlist URL\n> ").split()
+    else:
+        args = sys.argv[1:]
+    main(args)
 
-print(f"Downloading: {p.title}")
-for video in tqdm.tqdm(p.videos):
-    video.streams.filter(file_extension="mp4").desc().first().download(output_path=new_folder)
 
-print(f"Converting mp4 files to mp3 audio files")
-for mp4 in map(Path, listdir(new_folder)):
-    new_folder_mp4 = new_folder / mp4
-    if isfile(new_folder_mp4) and mp4.name.endswith(".mp4"):
-        with AudioFileClip(str(new_folder_mp4)) as f:
-            f.write_audiofile(new_folder_mp4.with_suffix(".mp3"))
-        os.remove(new_folder_mp4)
+
+
+"""
+https://www.youtube.com/watch?v=anTv1H2oYdU&list=PLQOJuTv0vLBDiNHIgbEj0dUC64_WOkcqB
+"""
